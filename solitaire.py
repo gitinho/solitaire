@@ -36,6 +36,7 @@ class Node(object):
         while(node.parent.move != None):
             sequence.append(node.move)
             node = node.parent
+        sequence.append(node.move)
         sequence.reverse()
         return sequence
     def addChild(self, move):
@@ -172,5 +173,6 @@ def auto(board):
 
 
 #manual(board)
-#stdscr = curses.initscr()
 auto(board)
+for solution in solutions:
+    print(seqToString(solution))
