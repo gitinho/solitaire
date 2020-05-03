@@ -3,23 +3,27 @@
 import os
 
 board = [
-    [0, 0, 1, 1, 1, 0, 0],
-    [0, 0, 1, 1, 1, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 2, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 1, 1, 1, 0, 0],
-    [0, 0, 1, 1, 1, 0, 0]
+    [0, 0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 2, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [0, 0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 0, 0, 0]
     ]
 
 goal = [
-    [0, 0, 2, 2, 2, 0, 0],
-    [0, 0, 2, 2, 2, 0, 0],
-    [2, 2, 2, 2, 2, 2, 2],
-    [2, 2, 2, 1, 2, 2, 2],
-    [2, 2, 2, 2, 2, 2, 2],
-    [0, 0, 2, 2, 2, 0, 0],
-    [0, 0, 2, 2, 2, 0, 0]
+    [0, 0, 0, 2, 2, 2, 0, 0, 0],
+    [0, 0, 0, 2, 2, 2, 0, 0, 0],
+    [0, 0, 0, 2, 2, 2, 0, 0, 0],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 1, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [0, 0, 0, 2, 2, 2, 0, 0, 0],
+    [0, 0, 0, 2, 2, 2, 0, 0, 0],
+    [0, 0, 0, 2, 2, 2, 0, 0, 0]
     ]
 
 solutions = []
@@ -62,7 +66,10 @@ class Node(object):
 
 def printBoard(board):
     print()
-    print('    A  B  C  D  E  F  G ')
+    header = '    '
+    for j in range(len(board)):
+        header += chr(65 + j) + '  '
+    print(header)
     i = 1
     for line in board:
         lineStr = ' ' + str(i) + ' '
@@ -110,17 +117,8 @@ def reverseMove(board, move):
     return board
 
 def moveToString(move):
-    dirs = [[" ↑"," ↓"," ↑"],[" →"],[" ←"]]
-    column = {
-        0: "A ",
-        1: "B ",
-        2: "C ",
-        3: "D ",
-        4: "E ",
-        5: "F ",
-        6: "G "
-    }
-    return column[move[1]] + str(move[2]+1) + dirs[move[0][0]][move[0][1]]
+    dirs = [[""," ↓"," ↑"],[" →"],[" ←"]]
+    return chr(move[1]+65) + ' ' + str(move[2]+1) + dirs[move[0][0]][move[0][1]]
 
 def seqToString(seq):
     seqStr = ""
@@ -172,7 +170,7 @@ def auto(board):
         child.process()
 
 
-#manual(board)
+manual(board)
 auto(board)
 for solution in solutions:
     print(seqToString(solution))
