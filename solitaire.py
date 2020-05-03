@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 
-import numpy
 import os
-import gc
-import curses
-
 
 board = [
     [0, 0, 1, 1, 1, 0, 0],
@@ -26,11 +22,11 @@ goal = [
     [0, 0, 2, 2, 2, 0, 0]
     ]
 
+solutions = []
+
 class Node(object):
     def __init__(self, parent):
-        self.board = None
         self.parent = parent
-        self.board = None
         self.move = None
         self.depth = None
         self.children = []
@@ -47,26 +43,22 @@ class Node(object):
         child.move = move
         self.children.append(child)
     def process(self):
-        self.board = self.parent.board
-        #printBoard(self.board)
-        #print(self.getSequence())
-        self.board = move(self.board, self.move)
+        global board
+        global solutions
+        board = move(board, self.move)
         self.depth = len(self.getSequence())
-        if self.board == goal:
-            print('i think we won')
-            printBoard(self.board)
-            test = input()
-        avails = availableMoves(self.board)
+        if board == goal:
+            print('Solution found:')
+            print(seqToString(self.getSequence()))
+            solutions.append([self.getSequence()])
+            printBoard(board)
+            return True
+        avails = availableMoves(board)
         for avail in avails:
             self.addChild(avail)
         for i in range(len(self.children)):
-            stdscr.addstr(self.depth, self.depth, str(i+1) + '/' + str(len(self.children)))
-            stdscr.refresh()
             self.children[i].process()
-        stdscr.addstr(self.depth, self.depth, '                                      ')
-        stdscr.refresh()
-        gc.collect()
-        del self
+        board = reverseMove(board, self.move)
 
 
 def printBoard(board):
@@ -86,119 +78,40 @@ def printBoard(board):
         i+=1
     print()
 
-
-def availableMoves1d(board, d):
-    indexes = []
-    for i in range(len(board)):
-        for j in range(len(board[i])):
-            if board[i][j:j+3] == [2, 1, 1]:
-                indexes.append((d, i, j))
-    return indexes
-
 def availableMoves(board):
+    dirs = [(0,1), (0,-1), (1,0), (-1,0)]
+    l = len(board)
     moves = []
-    moves += availableMoves1d(board, 0)
-    moves += availableMoves1d(numpy.transpose(numpy.matrix(board)).tolist(), 1)
-    moves += availableMoves1d(numpy.flip(numpy.matrix(board)).tolist(), 2)
-    moves += availableMoves1d(numpy.flip(numpy.transpose(numpy.matrix(board))).tolist(), 3)
-    return moves
+    for y in range(l):
+        for x in range(l):
+            for d in dirs:
+                if 0 <= x+2*d[0] < l and 0 <= y+2*d[1] < l:
+                    if board[y][x] == 1 and board[y+d[1]][x+d[0]] == 1 and board[y+2*d[1]][x+2*d[0]] == 2:
+                        moves.append((d, x, y))
+                
+    return moves 
+
+def moveAux(board, move, p1, p2, p3):
+    d = move[0]
+    x = move[1]
+    y = move[2]
+    
+    board[y][x] = p1
+    board[y+d[1]][x+d[0]] = p2
+    board[y+2*d[1]][x+2*d[0]] = p3
+
+    return board
 
 def move(board, move):
-    if move[0] == 0:
-        boardTmp = board
-    elif move[0] == 1:
-        boardTmp = numpy.transpose(numpy.matrix(board)).tolist()
-    elif move[0] == 2:
-        boardTmp = numpy.flip(numpy.matrix(board)).tolist()
-    elif move[0] == 3:
-        boardTmp = numpy.flip(numpy.transpose(numpy.matrix(board))).tolist()
-
-    y = move[1]
-    x = move[2]
-
-    boardTmp[y][x] = 1
-    boardTmp[y][x+1] = 2
-    boardTmp[y][x+2] = 2
-
-    if move[0] == 0:
-        board = boardTmp
-    elif move[0] == 1:
-        board = numpy.transpose(numpy.matrix(boardTmp)).tolist()
-    elif move[0] == 2:
-        board = numpy.flip(numpy.matrix(boardTmp)).tolist()
-    elif move[0] == 3:
-        board = numpy.flip(numpy.transpose(numpy.matrix(boardTmp))).tolist()
-
+    board = moveAux(board, move, 2, 2, 1)
     return board
 
 def reverseMove(board, move):
-    if move[0] == 0:
-        boardTmp = board
-    elif move[0] == 1:
-        boardTmp = numpy.transpose(numpy.matrix(board)).tolist()
-    elif move[0] == 2:
-        boardTmp = numpy.flip(numpy.matrix(board)).tolist()
-    elif move[0] == 3:
-        boardTmp = numpy.flip(numpy.transpose(numpy.matrix(board))).tolist()
-
-    y = move[1]
-    x = move[2]
-
-    boardTmp[y][x] = 2
-    boardTmp[y][x+1] = 1
-    boardTmp[y][x+2] = 1
-
-    if move[0] == 0:
-        board = boardTmp
-    elif move[0] == 1:
-        board = numpy.transpose(numpy.matrix(boardTmp)).tolist()
-    elif move[0] == 2:
-        board = numpy.flip(numpy.matrix(boardTmp)).tolist()
-    elif move[0] == 3:
-        board = numpy.flip(numpy.transpose(numpy.matrix(boardTmp))).tolist()
-
+    board = moveAux(board, move, 1, 1, 2)
     return board
 
-"""
-def nextMove(board, triedMoves, moveSeq):
-    print(moveSeq)
-    print(triedMoves)
-    printBoard(board)
-    availMoves = availableMoves(board)
-    if len(availMoves) == 0:
-        print('NO MORE AVAILABLE MOVES')
-        failed = moveSeq.pop()
-        board = reverseMove(board, failed)
-        triedMoves.append(failed)
-        return
-    counter = 0
-    for i in range(len(availMoves)):
-        if availMoves[i] in triedMoves:
-            counter += 1
-            continue
-        board = move(board, availMoves[i])
-        if board == goal:
-            print('WIN')
-            return
-        nextMove(board, [], moveSeq + [availMoves[i]])
-    if i == counter:
-        print('TRIED ALL THE MOVES')
-        failed = moveSeq.pop()
-        board = reverseMove(board, failed)
-        triedMoves.append(failed)
-        return
-    print('NOT SURE')
-    return
-"""
-
-
 def moveToString(move):
-    direction = {
-        0: " ←",
-        1: " ↑",
-        2: " →",
-        3: " ↓"
-    }
+    dirs = [[" ↑"," ↓"," ↑"],[" →"],[" ←"]]
     column = {
         0: "A ",
         1: "B ",
@@ -208,22 +121,14 @@ def moveToString(move):
         5: "F ",
         6: "G "
     }
+    return column[move[1]] + str(move[2]+1) + dirs[move[0][0]][move[0][1]]
 
-    if move[0] == 0:
-        return column[move[2]+2] + str(move[1]+1) + direction[move[0]]
-    elif move[0] == 1:
-        return column[move[1]] + str(move[2]+1+2) + direction[move[0]]
-    elif move[0] == 2:
-        return column[6-move[2]-2] + str(6-move[1]+1) + direction[move[0]]
-    elif move[0] == 3:
-        return column[6-move[1]] + str(6-move[2]+1-2) + direction[move[0]]
-
-
-
-#print(board)
-#print(numpy.transpose(board))
-
-#nextMove(board, [], [])
+def seqToString(seq):
+    seqStr = ""
+    for move in seq:
+        seqStr += moveToString(move) + ', '
+    return seqStr[:-2]
+        
 
 def manualAux(board, moveSeq):
     os.system('clear')
@@ -268,6 +173,6 @@ def auto(board):
         child.process()
 
 
-manual(board)
+#manual(board)
 #stdscr = curses.initscr()
-#auto(board)
+auto(board)
