@@ -51,8 +51,6 @@ class Node(object):
             print('Solution found:')
             print(seqToString(self.getSequence()))
             solutions.append([self.getSequence()])
-            printBoard(board)
-            return True
         avails = availableMoves(board)
         for avail in avails:
             self.addChild(avail)
